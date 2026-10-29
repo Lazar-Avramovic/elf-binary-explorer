@@ -1,0 +1,88 @@
+.TH BX 1 "2026-10-29" "bx 0.1.0" "User Commands"
+.SH NAME
+bx \- inspect ELF64 binaries
+.SH SYNOPSIS
+.B bx
+.I command
+.RI [ options ]
+.I file
+.SH DESCRIPTION
+.B bx
+is a small, static ELF64 binary explorer written in x86-64 assembly.
+It uses raw Linux system calls and has no libc or dynamic loader dependency.
+It is intended for the first look at an unfamiliar executable, not as a
+replacement for
+.BR readelf (1)
+or
+.BR objdump (1).
+.SH COMMANDS
+.TP
+.B info \fIfile\fR
+Print the file size, ELF type, machine, entry point, and section and segment
+counts.
+.TP
+.B sections \fIfile\fR
+Print the section table: name, type, flags, address, file offset, and size.
+Section names are sanitized; longer names are shortened with a trailing
+.B ..
+.TP
+.B hex \fR[\fIoptions\fR] \fIfile\fR
+Dump bytes with an ASCII column.
+.TP
+.B help
+Print usage information.
+.TP
+.B version
+Print the version.
+.SH OPTIONS
+The
+.B info
+and
+.B sections
+commands accept an optional
+.B --
+before or after the file name.
+The
+.B hex
+command accepts the following options:
+.TP
+.BI \-o " " offset ", " \-\-offset " " offset
+Start at
+.IR offset .
+Decimal and
+.B 0x
+prefixed hexadecimal values are accepted.
+.TP
+.BI \-n " " length ", " \-\-length " " length
+Dump at most
+.I length
+bytes.
+.TP
+.B \-\-
+End option parsing. The next argument is treated as a file name even if it
+begins with a hyphen.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+The file could not be opened, read, or parsed.
+.TP
+.B 2
+Invalid command-line usage.
+.SH LIMITS
+ELF64 little-endian files are supported. 32-bit and big-endian ELF files are
+rejected. Only regular files are accepted; devices, FIFOs, sockets and
+zero-size pseudo-files are rejected. Standard input is not supported.
+.PP
+Segments are counted but not listed. JSON output, color, PE/COFF and
+disassembly are not implemented.
+.SH AUTHOR
+Lazar Avramovic
+.PP
+https://github.com/Lazar-Avramovic
+.SH SEE ALSO
+.BR readelf (1),
+.BR objdump (1),
+.BR xxd (1)

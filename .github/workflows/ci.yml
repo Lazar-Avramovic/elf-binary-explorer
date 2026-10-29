@@ -1,0 +1,61 @@
+name: ci
+
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y make nasm binutils python3 groff zsh fish
+
+      - name: Build
+        run: bash build.sh
+
+      - name: Static binary
+        run: |
+          file build/bx
+          if readelf -l build/bx | grep -q INTERP; then
+            echo "bx is dynamically linked" >&2
+            exit 1
+          fi
+
+      - name: Man page
+        run: groff -man -Tutf8 bx.1 >/dev/null
+
+      - name: Shell completions
+        run: |
+          bash -n completions/bx.bash
+          zsh -n completions/_bx
+          fish -n completions/bx.fish
+
+      - name: Test
+        run: make test
+
+      - name: Install
+        run: |
+          rm -rf /tmp/bx-install
+          PREFIX=/tmp/bx-install bash install.sh
+          /tmp/bx-install/bin/bx --version
+          test -f /tmp/bx-install/share/man/man1/bx.1
+          test "$(stat -c %s /tmp/bx-install/bin/bx)" -le 15000
+
+      - name: Reproducible builds
+        run: |
+          cp build/bx /tmp/bx-first
+          bash build.sh
+          cmp /tmp/bx-first build/bx
+
+      - name: Stripped size
+        run: |
+          strip -o build/bx.stripped build/bx
+          size=$(stat -c %s build/bx.stripped)
+          echo "stripped $size bytes"
+          test "$size" -le 15000

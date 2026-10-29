@@ -1,0 +1,29 @@
+#compdef bx
+
+_bx() {
+    _arguments -C \
+        '1:command:->command' \
+        '*::arg:->args'
+
+    case $state in
+        command)
+            _values 'command' info sections hex help version
+            ;;
+        args)
+            case $words[2] in
+                hex)
+                    _arguments \
+                        '(-o --offset)'{-o,--offset}'[start offset]:offset' \
+                        '(-n --length)'{-n,--length}'[dump length]:length' \
+                        '--' \
+                        '*:file:_files'
+                    ;;
+                *)
+                    _files
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_bx "$@"
